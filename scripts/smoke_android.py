@@ -42,6 +42,7 @@ try:
  for attempt in range(12):
   root=tree()
   if '지금, 어떻게' in ET.tostring(root,encoding='unicode'):break
+  if attempt in (2,6): adb('shell','am','start','-W','-n','kr.mycabin.app/.MainActivity',check=False)
   time.sleep(5)
  else:
   (OUT/'failed-tree.xml').write_text(ET.tostring(root,encoding='unicode'));snapshot('failed-home')
