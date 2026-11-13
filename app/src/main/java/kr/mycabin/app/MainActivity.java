@@ -33,7 +33,8 @@ public final class MainActivity extends Activity {
   // Respect the page's device-width viewport when the vehicle resizes an app window.
   settings.setUseWideViewPort(true);
   settings.setLoadWithOverviewMode(false);
-  web.setInitialScale(100);
+  // Let WebView use device density instead of forcing 100% physical-pixel scaling.
+  web.setInitialScale(0);
   settings.setAllowFileAccess(false);
   settings.setAllowContentAccess(false);
   settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
@@ -57,18 +58,19 @@ public final class MainActivity extends Activity {
   tts=new TextToSpeech(this,status->{ttsReady=status==TextToSpeech.SUCCESS;});
   tts.setOnUtteranceProgressListener(new android.speech.tts.UtteranceProgressListener(){
    @Override public void onStart(String id){}
-   @Override public void onDone(String id){runOnUiThread(()->web.evaluateJavascript("window.dispatchEvent(new CustomEvent('cabin-audio',{detail:{error:false}}))",null));}
-   @Override public void onError(String id){runOnUiThread(()->web.evaluateJavascript("window.dispatchEvent(new CustomEvent('cabin-audio',{detail:{error:true}}))",null));}
+   @Override public void onDone(String id){speechResult(id,false);}
+   @Override public void onError(String id){speechResult(id,true);}
   });
   setContentView(web);
   web.loadUrl(ORIGIN+"index.html");
  }
+ private void speechResult(String id,boolean error){if(id==null||id.isEmpty())return;runOnUiThread(()->{if(web!=null)web.evaluateJavascript("window.dispatchEvent(new CustomEvent('cabin-audio',{detail:{id:"+org.json.JSONObject.quote(id)+",error:"+error+"}}))",null);});}
  private void notifyMessage(String text){web.evaluateJavascript("window.dispatchEvent(new CustomEvent('cabin-message',{detail:"+org.json.JSONObject.quote(text)+"}))",null);}
  private static WebResourceResponse blocked(){return new WebResourceResponse("text/plain","UTF-8",403,"Blocked",java.util.Collections.emptyMap(),new ByteArrayInputStream(new byte[0]));}
  public final class Bridge {
   @JavascriptInterface public String load(){return getPreferences(MODE_PRIVATE).getString("state","null");}
   @JavascriptInterface public void save(String json){if(json!=null&&json.length()<2000000)getPreferences(MODE_PRIVATE).edit().putString("state",json).apply();}
-  @JavascriptInterface public void speak(String text,String language){if(text==null)return;runOnUiThread(()->{if(ttsReady){tts.setLanguage(Locale.forLanguageTag(language));tts.speak(text.substring(0,Math.min(text.length(),3500)),TextToSpeech.QUEUE_FLUSH,null,"cabin");}});}
+  @JavascriptInterface public void speak(String text,String language,String id){if(text==null)return;runOnUiThread(()->{if(!ttsReady){speechResult(id,true);return;}int languageStatus=tts.setLanguage(Locale.forLanguageTag(language));if(languageStatus==TextToSpeech.LANG_MISSING_DATA||languageStatus==TextToSpeech.LANG_NOT_SUPPORTED){speechResult(id,true);return;}if(tts.speak(text.substring(0,Math.min(text.length(),3500)),TextToSpeech.QUEUE_FLUSH,null,id)==TextToSpeech.ERROR)speechResult(id,true);});}
   @JavascriptInterface public void stopSpeech(){runOnUiThread(()->{if(tts!=null)tts.stop();});}
   @JavascriptInterface public void askAI(String endpoint,String json){if(endpoint!=null&&endpoint.length()<2000&&json!=null&&json.length()<150000)runOnUiThread(()->{if(pleos.verifiedParked())ai.ask(endpoint,json);else web.evaluateJavascript("window.dispatchEvent(new CustomEvent('cabin-ai',{detail:{error:'실제 주차 상태를 확인할 수 없습니다. SDK 지원 기능 조회에서 권한과 차량 상태를 확인해 주세요.'}}))",null);});}
   @JavascriptInterface public void openVideo(String url){if(url==null||url.length()>2000)return;runOnUiThread(()->{try{android.net.Uri uri=android.net.Uri.parse(url);String host=uri.getHost();if(!"https".equals(uri.getScheme())||!("youtube.com".equals(host)||"www.youtube.com".equals(host)||"m.youtube.com".equals(host)||"youtu.be".equals(host)))return;if(!pleos.verifiedParked()){notifyMessage("실제 주차 상태를 확인한 뒤 다시 열어 주세요.");return;}startActivity(new Intent(Intent.ACTION_VIEW,uri));}catch(Exception ignored){notifyMessage("영상을 열 수 있는 앱이 없습니다.");}});}
