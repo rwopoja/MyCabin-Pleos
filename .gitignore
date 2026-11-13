@@ -1,0 +1,14 @@
+.gradle/
+**/build/
+local.properties
+*.jks
+*.keystore
+.env
+app/src/main/assets/*
+!app/src/main/assets/.gitkeep
+node_modules/
+media/frames/
+*.log
+*.idsig
+__pycache__/
+*.pyc

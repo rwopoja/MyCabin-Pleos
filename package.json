@@ -1,0 +1,8 @@
+{
+  "name": "mycabin-pleos",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {"test": "node --test tests/model.test.js", "test:ui": "node tests/ui-smoke.mjs"},
+  "devDependencies": {"happy-dom": "21.0.4"},
+  "engines": {"node": ">=20"}
+}

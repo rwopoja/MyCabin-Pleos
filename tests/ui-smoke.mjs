@@ -1,0 +1,23 @@
+import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';
+const {Window}=await import(process.env.CABIN_DOM_MODULE||'happy-dom');
+const root=path.resolve(import.meta.dirname,'..');const dir=path.resolve(process.env.CABIN_CAPTURE_DIR||'/tmp/mycabin-captures');fs.mkdirSync(dir,{recursive:true});
+function boot(storage){const w=new Window({url:'https://mycabin.test/'});w.innerWidth=1269;w.innerHeight=902;
+ w.speechSynthesis={speak(){},cancel(){}};w.SpeechSynthesisUtterance=class{constructor(t){this.text=t;}};
+ if(storage)w.localStorage.setItem('mycabin-state-v1',storage);
+ w.document.write(fs.readFileSync(path.join(root,'web/index.html'),'utf8').replace(/<script[^>]*>[\s\S]*?<\/script>/g,''));
+ for(const file of ['model.js','app.js'])w.eval(fs.readFileSync(path.join(root,'web',file),'utf8'));
+ return w;}
+let w=boot();let doc=w.document;
+function click(action,id){const q=`[data-action="${action}"]${id?`[data-id="${id}"]`:''}`;const b=doc.querySelector(q);assert.ok(b,`missing ${q}`);assert.ok(!b.disabled);b.click();}
+function capture(name){const copy=doc.documentElement.cloneNode(true);for(const el of doc.querySelectorAll('input,textarea,select')){const selector=el.id?'#'+el.id:el.dataset.field?'[data-field="'+el.dataset.field+'"]':el.dataset.vehicle?'[data-vehicle="'+el.dataset.vehicle+'"]':null;if(!selector)continue;const target=copy.querySelector(selector);if(!target)continue;if(el.tagName==='TEXTAREA')target.textContent=el.value;else if(el.tagName==='SELECT'){/* Keep rendered selected attributes; these controls are not changed in this scenario. */}else{target.setAttribute('value',el.value);if(el.checked)target.setAttribute('checked','');else target.removeAttribute('checked');}}let html=copy.outerHTML;html=html.replace(/<script[^>]*>[\s\S]*?<\/script>/g,'');fs.writeFileSync(path.join(dir,name+'.html'),html);}
+function field(selector,value){const el=doc.querySelector(selector);assert.ok(el);el.value=value;el.dispatchEvent(new w.Event('input',{bubbles:true}));}
+assert.equal(w.CabinApp.getView(),'home');capture('01-home');
+click('mode','rest');capture('02-scenes');click('detail','rest20');click('edit');field('[data-field="name"]','나의 20분 휴식');field('[data-field="temperature"]','21.5');field('[data-field="ambient"]','18');capture('03-edit');click('save');capture('04-saved');
+assert.equal(w.CabinApp.getState().scenes[0].temperature,21.5);
+const stored=w.localStorage.getItem('mycabin-state-v1');w.happyDOM.abort();w=boot(stored);doc=w.document;
+assert.equal(w.CabinApp.getState().scenes[0].name,'나의 20분 휴식');click('mode','rest');click('detail','rest20');click('start');capture('05-confirm');click('confirm-start');assert.equal(w.CabinApp.getVehicle().temperature,21.5);capture('06-session');click('end');click('restore');assert.equal(w.CabinApp.getVehicle().temperature,23);
+click('mode','learn');capture('07-courses');click('learn','english');capture('08-lesson');click('next');assert.equal(w.CabinApp.getState().courses[0].position,1);click('courses');click('learn','english');assert.match(doc.querySelector('.lesson').textContent,/window seat/);click('summary');capture('09-summary');
+click('courses');w.dispatchEvent(new w.CustomEvent('cabin-voice',{detail:{text:'1번'}}));assert.equal(w.CabinApp.getView(),'learning');click('courses');click('new-course');field('#course-title','내가 준비한 업무 표현');field('#course-text','첫 번째 표현을 정리합니다.\n다음 표현도 이어서 학습합니다.');capture('10-new-course');click('save-course');assert.equal(w.CabinApp.getState().courses.length,2);
+click('settings');click('drive');capture('11-driving');click('mode','sleep');click('detail','nap');click('start');assert.equal(w.CabinApp.getView(),'detail');assert.match(doc.querySelector('#toast').textContent,/주차/);capture('12-blocked');
+click('settings');click('park');click('mode','meal');click('detail','lunch');capture('13-meal');
+console.log('UI smoke passed: edit/save/reload, apply/restore, courses, driving gate.');w.happyDOM.abort();
