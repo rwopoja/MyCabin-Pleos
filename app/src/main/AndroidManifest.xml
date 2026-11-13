@@ -19,7 +19,7 @@
   <meta-data android:name="ai.pleos.playground.sdk.vehicle.current_version_name" android:value="2.3.2"/>
   <meta-data android:name="ai.pleos.playground.sdk.vehicle.current_version_code" android:value="73"/>
   <uses-library android:name="android.car" android:required="false"/>
-  <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="landscape" android:configChanges="orientation|screenSize|keyboardHidden">
+  <activity android:name=".MainActivity" android:exported="true" android:resizeableActivity="true" android:configChanges="orientation|screenSize|keyboardHidden">
    <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
   </activity>
  </application>
