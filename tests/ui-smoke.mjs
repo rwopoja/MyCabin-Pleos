@@ -37,9 +37,10 @@ click('settings');click('reset');assert.match(doc.querySelector('.modal').textCo
 assert.notEqual(w.localStorage.getItem('mycabin-state-v1'),damaged);
 w.happyDOM.abort();
 // Vehicle writes require a separate confirmation and use the selected scene.
-let sent=[];w=boot(null,{load:()=>null,save(){},stopSpeech(){},applyVehicle(value){sent.push(JSON.parse(value));}});doc=w.document;
+let sent=[],seatSent=[];w=boot(null,{load:()=>null,save(){},stopSpeech(){},applyVehicle(value){sent.push(JSON.parse(value));},applySeat(value){seatSent.push(JSON.parse(value));}});doc=w.document;
 click('mode','meal');click('detail','lunch');click('scene-sdk-apply');assert.equal(sent.length,0);click('close-modal');assert.equal(sent.length,0);
 click('scene-sdk-apply');click('scene-sdk-confirm');assert.equal(sent.length,1);assert.equal(sent[0].id,'lunch');assert.equal(sent[0].temperature,22);
+click('scene-sdk-seat');assert.equal(seatSent.length,0);click('scene-sdk-seat-confirm');assert.equal(seatSent.length,1);assert.equal(seatSent[0].id,'lunch');
 w.innerWidth=650;w.innerHeight=900;w.dispatchEvent(new w.Event('resize'));assert.equal(doc.querySelector('#stage').style.width,'650px');assert.equal(doc.querySelector('#stage').style.transform,'none');
 w.innerWidth=1269;w.innerHeight=902;w.dispatchEvent(new w.Event('resize'));assert.equal(doc.querySelector('#stage').style.width,'1269px');
 console.log('UI smoke passed: edit/save/reload, apply/restore, progress, corrupt storage protection and driving gate.');w.happyDOM.abort();
