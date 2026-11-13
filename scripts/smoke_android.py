@@ -39,7 +39,13 @@ adb('logcat','-c');print(adb('shell','am','start','-W','-n','kr.mycabin.app/.Mai
 time.sleep(5)
 record=None
 try:
- root=tree();assert '지금, 어떻게' in ET.tostring(root,encoding='unicode'), 'App home did not render'
+ for attempt in range(12):
+  root=tree()
+  if '지금, 어떻게' in ET.tostring(root,encoding='unicode'):break
+  time.sleep(5)
+ else:
+  (OUT/'failed-tree.xml').write_text(ET.tostring(root,encoding='unicode'));snapshot('failed-home')
+  raise AssertionError('App home did not render within 60 seconds')
  snapshot('01-home')
  record=subprocess.Popen(['adb','shell','screenrecord','--time-limit','90','--bit-rate','4000000','/sdcard/MyCabin_Android_AVD.mp4'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
  time.sleep(3)
