@@ -27,6 +27,7 @@ jobs:
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - name: Build and verify signed demo APK
         run: |
+          rm -f 'apk/김재윤_마이캐빈_release.apk'
           python3 scripts/build_local.py
           sha256sum 'apk/김재윤_마이캐빈_release.apk'
       - name: Enable KVM
