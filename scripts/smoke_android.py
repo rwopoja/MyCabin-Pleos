@@ -57,7 +57,13 @@ try:
  tap('학습');snapshot('05-courses')
  tap('학습 시작');snapshot('06-lesson');tap('다음');snapshot('07-next')
  tap('학습 목록');tap('이어서 학습');snapshot('08-resume')
- (OUT/'result.json').write_text(json.dumps({'apk_installed':True,'ui_flow':'passed','platform':'ordinary Android API 34 AVD; NOT Pleos Connect','vehicle':'simulated','sdk_runtime_verified':False},ensure_ascii=False,indent=2))
+ # Exercise a tall app window as well as the wide layout. This is an ordinary AVD, not Pleos.
+ adb('shell','wm','size','800x1200');time.sleep(4)
+ root=tree();assert '학습' in ET.tostring(root,encoding='unicode'), 'Portrait app view did not render'
+ snapshot('09-portrait')
+ tap('처음으로');assert '지금, 어떻게' in ET.tostring(tree(),encoding='unicode'), 'Portrait navigation failed'
+ snapshot('10-portrait-home')
+ (OUT/'result.json').write_text(json.dumps({'apk_installed':True,'ui_flow':'passed (wide and portrait)','platform':'ordinary Android API 34 AVD; NOT Pleos Connect','vehicle':'simulated','sdk_runtime_verified':False},ensure_ascii=False,indent=2))
  print('Actual Android APK launch and accessibility flow passed. Pleos service not present.',flush=True)
 finally:
  if record:
