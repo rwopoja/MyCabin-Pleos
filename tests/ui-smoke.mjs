@@ -1,7 +1,7 @@
 import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';
 const {Window}=await import(process.env.CABIN_DOM_MODULE||'happy-dom');
 const root=path.resolve(import.meta.dirname,'..');const dir=path.resolve(process.env.CABIN_CAPTURE_DIR||'/tmp/mycabin-captures');fs.mkdirSync(dir,{recursive:true});
-function boot(storage){const w=new Window({url:'https://mycabin.test/'});w.innerWidth=1269;w.innerHeight=902;
+function boot(storage,native){const w=new Window({url:'https://mycabin.test/'});w.innerWidth=1269;w.innerHeight=902;if(native)w.CabinNative=native;
  w.speechSynthesis={speak(){},cancel(){}};w.SpeechSynthesisUtterance=class{constructor(t){this.text=t;}};
  if(storage)w.localStorage.setItem('mycabin-state-v1',storage);
  w.document.write(fs.readFileSync(path.join(root,'web/index.html'),'utf8').replace(/<script[^>]*>[\s\S]*?<\/script>/g,''));
@@ -35,4 +35,9 @@ click('mode','rest');click('detail','rest20');click('edit');field('[data-field="
 assert.equal(w.localStorage.getItem('mycabin-state-v1'),damaged);assert.match(doc.querySelector('#toast').textContent,/보호/);
 click('settings');click('reset');assert.match(doc.querySelector('.modal').textContent,/삭제/);click('confirm-reset');
 assert.notEqual(w.localStorage.getItem('mycabin-state-v1'),damaged);
+w.happyDOM.abort();
+// Vehicle writes require a separate confirmation and use the selected scene.
+let sent=[];w=boot(null,{load:()=>null,save(){},stopSpeech(){},applyVehicle(value){sent.push(JSON.parse(value));}});doc=w.document;
+click('mode','meal');click('detail','lunch');click('scene-sdk-apply');assert.equal(sent.length,0);click('close-modal');assert.equal(sent.length,0);
+click('scene-sdk-apply');click('scene-sdk-confirm');assert.equal(sent.length,1);assert.equal(sent[0].id,'lunch');assert.equal(sent[0].temperature,22);
 console.log('UI smoke passed: edit/save/reload, apply/restore, progress, corrupt storage protection and driving gate.');w.happyDOM.abort();
