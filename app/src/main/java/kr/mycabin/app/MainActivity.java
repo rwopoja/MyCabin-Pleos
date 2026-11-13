@@ -30,6 +30,9 @@ public final class MainActivity extends Activity {
   WebSettings settings=web.getSettings();
   settings.setJavaScriptEnabled(true);
   settings.setDomStorageEnabled(true);
+  // Respect the page's device-width viewport when the vehicle resizes an app window.
+  settings.setUseWideViewPort(true);
+  settings.setLoadWithOverviewMode(false);
   settings.setAllowFileAccess(false);
   settings.setAllowContentAccess(false);
   settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
