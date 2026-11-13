@@ -53,3 +53,11 @@ jobs:
             apk/김재윤_마이캐빈_release.apk
             runtime-artifacts/
           if-no-files-found: error
+  pleos-image-availability:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Inspect official Pleos system-image catalog
+        run: |
+          curl --fail --silent --show-error --max-time 60 'https://nexus-playground.pleos.ai/repository/raw-releases/connect-avd/2.x/crp-sys-img.xml' -o pleos-catalog.xml
+          python3 -c "import xml.etree.ElementTree as E; r=E.parse('pleos-catalog.xml').getroot(); print(E.tostring(r,encoding='unicode')[:12000])"
