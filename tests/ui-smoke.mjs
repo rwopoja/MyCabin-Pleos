@@ -20,4 +20,19 @@ click('mode','learn');capture('07-courses');click('learn','english');capture('08
 click('courses');w.dispatchEvent(new w.CustomEvent('cabin-voice',{detail:{text:'1번'}}));assert.equal(w.CabinApp.getView(),'learning');click('courses');click('new-course');field('#course-title','내가 준비한 업무 표현');field('#course-text','첫 번째 표현을 정리합니다.\n다음 표현도 이어서 학습합니다.');capture('10-new-course');click('save-course');assert.equal(w.CabinApp.getState().courses.length,2);
 click('settings');click('drive');capture('11-driving');click('mode','sleep');click('detail','nap');click('start');assert.equal(w.CabinApp.getView(),'detail');assert.match(doc.querySelector('#toast').textContent,/주차/);capture('12-blocked');
 click('settings');click('park');click('mode','meal');click('detail','lunch');capture('13-meal');
-console.log('UI smoke passed: edit/save/reload, apply/restore, courses, driving gate.');w.happyDOM.abort();
+// A finished audio segment resumes at the next segment after leaving and reopening.
+let lastClip;w.Audio=class {constructor(){lastClip=this;} play(){return Promise.resolve();} pause(){}};
+click('mode','learn');click('restart','english');click('play');lastClip.onended();
+assert.equal(w.CabinApp.getState().courses[0].position,1);
+click('courses');click('learn','english');assert.match(doc.querySelector('.lesson').textContent,/window seat/);
+click('prev');assert.equal(w.CabinApp.getState().courses[0].progress,0.25);
+click('courses');click('restart','english');assert.equal(w.CabinApp.getState().courses[0].progress,0);
+w.happyDOM.abort();
+// A damaged saved record must never silently overwrite the original data.
+const damaged=JSON.stringify({schema:1,scenes:[{mode:'missing',name:'old'}],courses:[]});
+w=boot(damaged);doc=w.document;assert.match(doc.querySelector('#toast').textContent,/보호/);
+click('mode','rest');click('detail','rest20');click('edit');field('[data-field="name"]','변경');click('save');
+assert.equal(w.localStorage.getItem('mycabin-state-v1'),damaged);assert.match(doc.querySelector('#toast').textContent,/보호/);
+click('settings');click('reset');assert.match(doc.querySelector('.modal').textContent,/삭제/);click('confirm-reset');
+assert.notEqual(w.localStorage.getItem('mycabin-state-v1'),damaged);
+console.log('UI smoke passed: edit/save/reload, apply/restore, progress, corrupt storage protection and driving gate.');w.happyDOM.abort();
