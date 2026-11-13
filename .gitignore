@@ -12,3 +12,4 @@ media/frames/
 *.idsig
 __pycache__/
 *.pyc
+runtime-artifacts/
