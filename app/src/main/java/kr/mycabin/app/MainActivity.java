@@ -33,6 +33,7 @@ public final class MainActivity extends Activity {
   // Respect the page's device-width viewport when the vehicle resizes an app window.
   settings.setUseWideViewPort(true);
   settings.setLoadWithOverviewMode(false);
+  web.setInitialScale(100);
   settings.setAllowFileAccess(false);
   settings.setAllowContentAccess(false);
   settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
