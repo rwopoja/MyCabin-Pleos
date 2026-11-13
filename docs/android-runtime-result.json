@@ -1,0 +1,7 @@
+{
+  "apk_installed": true,
+  "ui_flow": "passed",
+  "platform": "ordinary Android API 34 AVD; NOT Pleos Connect",
+  "vehicle": "simulated",
+  "sdk_runtime_verified": false
+}

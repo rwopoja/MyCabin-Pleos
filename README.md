@@ -7,13 +7,15 @@
 ## 바로 확인하기
 
 - [서명된 release APK](apk/김재윤_마이캐빈_release.apk)
+- [실제 APK 실행 녹화 / 약 84초](media/MyCabin_APK_Demo.mp4)
+- [원본 Android AVD 녹화](media/MyCabin_Android_AVD_Raw.mp4)
 - [기능 흐름 영상 / 89초](media/MyCabin_Prototype_Demo.mp4)
 - [세로형 숏폼 초안 / 45초](media/MyCabin_Shortform.mp4)
 - [시연 순서](docs/DEMO_GUIDE.md)
 - [기능별 구현·검증 현황](docs/IMPLEMENTATION_STATUS.md)
 - [검증 기록 및 APK SHA-256](docs/VERIFICATION.md)
 
-**영상은 동작 테스트로 얻은 DOM 화면을 렌더링해 편집한 프로토타입 기능 흐름 영상입니다. 실제 APK나 Pleos 에뮬레이터의 화면 녹화는 아닙니다.** 차량 설정은 영상에서 모두 모의 상태로 표시합니다. 이 APK는 빌드·서명 검증을 완료했으며, Android 설치·실행과 Pleos Vehicle Service 응답은 아직 검증하지 않았습니다.
+**실제 APK 실행 녹화**는 제출 APK를 일반 Android 14 AVD에 설치해 휴식 선택·편집·저장·타이머·복원과 학습 구간 이동·이어가기를 확인한 화면입니다. **Pleos 전용 AVD 녹화가 아니며 차량 동작은 모의입니다.** 별도의 프로토타입 기능 흐름 영상과 숏폼은 테스트 DOM을 렌더링해 편집한 목업 영상입니다. Pleos Vehicle Service 응답과 실제 차량 쓰기는 아직 검증하지 않았습니다.
 
 ## 구현 범위
 
@@ -85,7 +87,7 @@ python scripts/build_local.py
 - 앱 기준 캔버스: **1269 × 902**, WebView 사용 가능 영역에 맞춰 비율 유지 확대·축소
 - 공개 Pleos 화면 참고 목업: **1903 × 1068** 이미지. 참고 이미지 해상도이며 AVD 실제 디스플레이 규격 측정값이 아닙니다.
 - 앱 화면과 OS 화면을 구분하며 시스템 버튼을 앱에서 가로채지 않습니다.
-- UI 테스트: Happy DOM의 이벤트·저장 상태 검증. 실제 WebView/브라우저 레이아웃·음성 장치 검증은 아닙니다.
+- UI 테스트: Happy DOM 이벤트·저장 상태 검증 + 일반 Android 14 Google APIs x86_64 AVD에서 제출 APK 설치·WebView 화면 전환 확인. AVD 표시 해상도 1920×1080, density 160. 음성 장치 출력은 미검증입니다.
 - Pleos 전용 AVD 버전·실제 화면 규격·서비스 응답 결과는 실행 후 `docs/VERIFICATION.md`에 추가 기록해야 합니다.
 
 ```bash

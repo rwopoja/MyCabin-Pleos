@@ -18,7 +18,11 @@ APK 설치 후 My Cabin을 엽니다. 화면 설정에서 초기화하면 처음
 
 실제 SDK 연결은 위 흐름과 별도로 설정 → 지원 기능 조회에서 확인합니다. 서비스·주차 판정·권한 미충족 시 쓰기 잠금은 정상 처리입니다. 실제 시트가 움직였다는 연출을 만들지 않습니다.
 
-## 영상 파일
+## 실제 APK 실행 녹화
+
+`media/MyCabin_APK_Demo.mp4`는 일반 Android 14 AVD에서 **제출 release APK를 실제 실행**한 약 84초 화면 녹화입니다. 편집 화면에서 저장하기, 모의 휴식 시작·종료·복원, 학습 구간 이동·이어가기를 보여 줍니다. `MyCabin_Android_AVD_Raw.mp4`는 원본입니다. Pleos 전용 AVD가 아니며 SDK 차량 제어·AI 실응답을 검증하는 녹화가 아닙니다.
+
+## 목업 영상 파일
 
 - `media/MyCabin_Prototype_Demo.mp4`: DOM 렌더 기반 기능 흐름 영상. 무음·한글 자막형
 - `media/MyCabin_Shortform.mp4`: 세로 45초 숏폼 초안. 무음·한글 자막형
