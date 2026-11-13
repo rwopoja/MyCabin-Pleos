@@ -43,4 +43,16 @@ click('scene-sdk-apply');click('scene-sdk-confirm');assert.equal(sent.length,1);
 click('scene-sdk-seat');assert.equal(seatSent.length,0);click('scene-sdk-seat-confirm');assert.equal(seatSent.length,1);assert.equal(seatSent[0].id,'lunch');
 w.innerWidth=650;w.innerHeight=900;w.dispatchEvent(new w.Event('resize'));assert.equal(doc.querySelector('#stage').style.width,'650px');assert.equal(doc.querySelector('#stage').style.transform,'none');
 w.innerWidth=1269;w.innerHeight=902;w.dispatchEvent(new w.Event('resize'));assert.equal(doc.querySelector('#stage').style.width,'1269px');
+// Pausing a bundled recording must resume the same audio object and position.
+click('mode','learn');click('restart','english');let created=0;let recording;
+w.Audio=class {constructor(){created++;recording=this;this.currentTime=0;}play(){return Promise.resolve();}pause(){}};
+click('play');recording.currentTime=4.2;click('pause');assert.match(doc.querySelector('[data-action="play"]').textContent,/이어 듣기/);click('play');assert.equal(created,1);assert.equal(recording.currentTime,4.2);
+click('next');click('play');assert.equal(created,2);
+w.happyDOM.abort();
+// Only the matching lesson utterance can advance a newly created lesson.
+let utterance='';w=boot(null,{load:()=>null,save(){},stopSpeech(){},speak(text,language,id){utterance=id;}});doc=w.document;
+click('mode','learn');click('new-course');field('#course-title','음성 확인');field('#course-text','첫 번째 문장입니다.\n두 번째 문장입니다.');click('save-course');
+const userCourse=w.CabinApp.getState().courses.find(c=>c.title==='음성 확인');click('learn',userCourse.id);click('play');assert.ok(utterance.startsWith('lesson-'));
+w.dispatchEvent(new w.CustomEvent('cabin-audio',{detail:{id:'other',error:false}}));assert.equal(w.CabinApp.getState().courses.find(c=>c.id===userCourse.id).position,0);
+w.dispatchEvent(new w.CustomEvent('cabin-audio',{detail:{id:utterance,error:false}}));assert.equal(w.CabinApp.getState().courses.find(c=>c.id===userCourse.id).position,1);
 console.log('UI smoke passed: edit/save/reload, apply/restore, progress, corrupt storage protection and driving gate.');w.happyDOM.abort();
