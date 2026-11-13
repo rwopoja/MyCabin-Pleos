@@ -1,17 +1,17 @@
 (function(){
 'use strict';const C=window.Cabin,$=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let aiResult=null,aiPending=false;let sdkLog=[]; const native=window.CabinNative;const key='mycabin-state-v1';let data=C.seed(),saved=true;
-try{data=C.hydrate(JSON.parse(native?native.load():localStorage.getItem(key)));}catch{saved=false;}
+let aiResult=null,aiPending=false;let sdkLog=[]; const native=window.CabinNative;const key='mycabin-state-v1';let data=C.seed(),saved=true,storageLocked=false,originalStorage=null;
+try{originalStorage=native?native.load():localStorage.getItem(key);const raw=JSON.parse(originalStorage);if(raw!==null&&!C.validStored(raw)){storageLocked=true;saved=false;}else data=C.hydrate(raw);}catch{storageLocked=true;saved=false;}
 const vehicle=new C.MockVehicleGateway();let view='home',mode='rest',draft=null,selected=null,session=null,modal=null,courseId='english',unitIndex=0,playing=false,clip=null,ticker=null,seconds=0,summaryOpen=false;const params=new URLSearchParams(location.search),shell=params.has('shell');let opened=!shell;
 if(shell){document.body.classList.add('shell');$('#shell').hidden=false;}
 function resize(){const w=shell?1903:1269,h=shell?1068:902,scale=Math.min(innerWidth/w,innerHeight/h);Object.assign($('#stage').style,{transform:`scale(${scale})`,left:(innerWidth-w*scale)/2+'px',top:(innerHeight-h*scale)/2+'px'});}addEventListener('resize',resize);resize();
-function persist(){try{const json=JSON.stringify(data);if(native)native.save(json);else localStorage.setItem(key,json);saved=true;}catch{saved=false;toast('저장 공간에 접근할 수 없어요. 이번 실행에서만 유지됩니다.');}}
+function persist(){if(storageLocked){saved=false;toast('기존 저장자료를 보호하고 있어요. 설정에서 원본을 내보내거나 초기화해 주세요.');return;}try{const json=JSON.stringify(data);if(native)native.save(json);else localStorage.setItem(key,json);saved=true;}catch{saved=false;toast('저장 공간에 접근할 수 없어요. 이번 실행에서만 유지됩니다.');}}
 function toast(t){$('#toast').textContent=t;$('#toast').style.display='block';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').style.display='none',3500);}
 const btn=(label,action,kind='secondary',extra='')=>`<button class="${kind}" data-action="${action}" ${extra}>${label}</button>`;
 const activeCourse=()=>data.courses.find(x=>x.id===courseId)||data.courses[0];
-function stopAudio(){playing=false;if(clip){clip.pause();clip=null;}if(native)native.stopSpeech();else if(window.speechSynthesis)window.speechSynthesis.cancel();}
+function stopAudio(){playing=false;if(clip){clip.onended=null;clip.onerror=null;clip.pause();clip=null;}if(native)native.stopSpeech();else if(window.speechSynthesis)window.speechSynthesis.cancel();}
 function speak(text,lang='ko-KR'){if(native){native.speak(text,lang);return true;}if(window.speechSynthesis){const u=new SpeechSynthesisUtterance(text);u.lang=lang;window.speechSynthesis.speak(u);return true;}return false;}
-function progress(completed=false){const c=activeCourse();if(!c)return;data.courses=data.courses.map(x=>x.id===c.id?{...x,position:unitIndex,progress:Math.min(1,(unitIndex+(completed?1:0))/C.units(c).length)}:x);persist();}
+function progress(completed=false,reset=false){const c=activeCourse();if(!c)return;data.courses=data.courses.map(x=>x.id===c.id?C.updateProgress(x,unitIndex,completed,reset):x);persist();}
 function playLesson(){const c=activeCourse();if(!c)return;stopAudio();const lines=C.units(c);playing=true;progress();if(c.id==='english'){
 clip=new Audio('assets/lesson-'+(unitIndex+1)+'.wav');clip.onended=()=>{playing=false;progress(true);render();};clip.onerror=()=>{playing=false;toast('음성 재생을 시작하지 못했어요. 자료는 화면에서 볼 수 있어요.');render();};clip.play().catch(()=>{playing=false;render();});
 }else{if(!speak(lines[unitIndex])){playing=false;toast('이 브라우저는 음성 출력을 지원하지 않아요.');}}render();}
@@ -30,7 +30,7 @@ function navigate(v){if(session&&v!=='session'){toast('먼저 휴식을 종료�
 function endSession(){if(session){modal={title:'휴식을 마칠까요?',text:'이용 전 설정으로 모의 차량 값을 복원합니다. 실제 좌석은 움직이지 않습니다.',confirm:'종료 및 모의 복원',action:'restore'};render();}}
 $('#app').addEventListener('input',e=>{const k=e.target.dataset.field;if(!k||!draft)return;draft[k]=e.target.type==='checkbox'?e.target.checked:e.target.value;const v=$('#val-'+k);if(v)v.textContent=e.target.value+(k==='temperature'?'°C':'%');});
 $('#app').addEventListener('change',e=>{const k=e.target.dataset.vehicle;if(!k)return;vehicle.state[k]=e.target.checked;});
-$('#app').addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;const a=b.dataset.action,id=b.dataset.id;try{switch(a){
+$('#app').addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;const a=b.dataset.action,id=b.dataset.id;if(storageLocked&&['save','save-course','duplicate','confirm-delete','confirm-start','learn','restart','next','prev','play','save-ai'].includes(a)){toast('기존 저장자료를 보호하고 있어요. 설정에서 원본을 내보내거나 초기화해 주세요.');return;}try{switch(a){
 case 'home':navigate('home');break;case 'mode':if(session){toast('먼저 휴식을 종료해 주세요.');break;}mode=id;stopAudio();navigate(id==='learn'?'courses':'scenes');break;
 case 'recent':if(data.lastScene){selected=data.lastScene;mode=(data.scenes.find(x=>x.id===selected)||{}).mode||'rest';navigate('detail');}else toast('마이씬을 한 번 실행해 보세요.');break;
 case 'scenes':navigate('scenes');break;case 'detail':selected=id;navigate('detail');break;
@@ -47,7 +47,7 @@ case 'end':endSession();break;case 'restore':clearInterval(ticker);stopAudio();v
 case 'alarm':speak('휴식 시간이 끝났습니다. 천천히 다음 이동을 준비해 주세요.');toast('기기 음성 합성으로 알림을 재생합니다.');break;
 case 'learning-scenes':mode='learn';navigate('scenes');break;case 'courses':stopAudio();navigate('courses');break;case 'new-course':navigate('new-course');break;
 case 'save-course':{const c=C.course({title:$('#course-title').value,text:$('#course-text').value,video:$('#course-video').value});data.courses.push(c);persist();navigate('courses');toast('학습자료를 저장했어요.');break;}
-case 'learn':case 'restart':{stopAudio();courseId=id;aiResult=null;const c=activeCourse();unitIndex=a==='restart'?0:Math.min(C.units(c).length-1,Math.floor(c.position||0));progress();summaryOpen=false;navigate('learning');break;}
+case 'learn':case 'restart':{stopAudio();courseId=id;aiResult=null;const c=activeCourse();unitIndex=a==='restart'?0:Math.min(C.units(c).length-1,Math.floor(c.position||0));progress(false,a==='restart');summaryOpen=false;navigate('learning');break;}
 case 'play':playLesson();break;case 'pause':stopAudio();render();break;case 'next':case 'prev':stopAudio();unitIndex=Math.max(0,Math.min(C.units(activeCourse()).length-1,unitIndex+(a==='next'?1:-1)));progress();render();break;
 case 'voice-list':stopAudio();if(native&&native.listen)native.listen();else toast('마이크 선택은 APK와 음성 인식 서비스에서 사용할 수 있어요.');break;
 case 'read-list':speak(data.courses.slice(0,3).map((c,i)=>`${i+1}번 ${c.title}`).join('. '));toast('학습 목록을 읽어드릴게요.');break;
@@ -57,9 +57,9 @@ case 'ai-panel':if(!vehicle.state.parked){toast('AI 화면은 주차 후 열어 
 case 'ai-confirm':modal=null;if(aiPending){toast('AI 응답을 기다리고 있어요.');render();break;}if(native&&native.askAI){aiPending=true;aiResult=null;native.askAI(data.aiEndpoint,JSON.stringify({source:activeCourse().text,question:'자료의 핵심을 쉽게 설명하고 확인 질문 한 개를 만들어 주세요.'}));toast('AI 설명을 요청했어요.');}else toast('AI 서버 연결은 APK에서 사용할 수 있어요.');render();break;
 case 'video':if(!vehicle.state.parked){toast('영상은 주차 후 열어 주세요.');break;}if(native&&native.openVideo)native.openVideo(activeCourse().video);else toast('영상 원본 열기는 APK에서 사용할 수 있어요.');break;
 case 'sdk-seat':modal={title:'저장된 휴식 좌석 메모리를 호출할까요?',text:'실제 좌석 이동 요청입니다. 주변에 사람이나 물건이 없는지 확인해 주세요. 실제 주차 상태와 지원 범위를 확인한 뒤 요청합니다. 이동 완료를 자동 판정하지 않습니다.',confirm:'확인하고 좌석 메모리 요청',action:'sdk-seat-confirm'};render();break;case 'sdk-seat-confirm':modal=null;if(native&&native.applySeat)native.applySeat(JSON.stringify(data.scenes.find(x=>x.mode==='rest')||data.scenes[0]));else toast('좌석 SDK는 APK에서 사용해 주세요.');render();break;case 'sdk-inspect':if(native)native.inspectVehicle();else toast('실제 SDK 조회는 APK에서 실행해 주세요.');break;case 'sdk-apply':modal={title:'Pleos SDK로 공조·조명을 적용할까요?',text:'모의 동작이 아닙니다. 실제 주차 상태와 쓰기 지원을 확인한 뒤 첫 휴식 마이씬의 온도와 밝기만 요청합니다. 좌석은 제어하지 않습니다.',confirm:'SDK 적용 요청',action:'sdk-confirm'};render();break;case 'sdk-confirm':modal=null;if(native)native.applyVehicle(JSON.stringify(data.scenes.find(x=>x.mode==='rest')||data.scenes[0]));else toast('SDK 적용은 APK에서만 가능합니다.');render();break;case 'settings':navigate('settings');break;case 'park':vehicle.state.parked=true;render();break;case 'drive':if(session){toast('진행 중인 휴식을 종료해 주세요.');break;}vehicle.state.parked=false;stopAudio();render();break;
-case 'export':{const text=JSON.stringify(data,null,2);if(native){native.exportData(text);toast('내보낼 앱을 선택해 주세요.');}else{const blob=new Blob([text],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='mycabin-settings.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);}break;}
-case 'reset':modal={title:'시연 데이터를 초기화할까요?',text:'저장한 마이씬과 학습자료를 기본 예제로 바꿉니다.',confirm:'초기화',action:'confirm-reset'};render();break;
-case 'confirm-reset':stopAudio();data=C.seed();persist();navigate('home');break;case 'close-modal':modal=null;render();break;
+case 'export':{const text=storageLocked&&originalStorage!==null?originalStorage:JSON.stringify(data,null,2);if(native){native.exportData(text);toast('내보낼 앱을 선택해 주세요.');}else{const blob=new Blob([text],{type:'application/json'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='mycabin-settings.json';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);}break;}
+case 'reset':modal={title:'시연 데이터를 초기화할까요?',text:storageLocked?'읽지 못한 기존 저장자료가 삭제됩니다. 필요하면 먼저 설정 내보내기로 원본을 보관해 주세요.':'저장한 마이씬과 학습자료를 기본 예제로 바꿉니다.',confirm:'초기화',action:'confirm-reset'};render();break;
+case 'confirm-reset':stopAudio();storageLocked=false;originalStorage=null;data=C.seed();persist();navigate('home');break;case 'close-modal':modal=null;render();break;
 }}catch(err){toast(err.message||'다시 시도해 주세요.');}});
 $('#launcher').onclick=()=>{$('#library').hidden=!$('#library').hidden;};$('#launch').onclick=()=>{opened=true;$('#library').hidden=true;render();};
 window.addEventListener('pleos-result',e=>{sdkLog.push(e.detail.event+': '+e.detail.value);sdkLog=sdkLog.slice(-18);if(view==='settings')render();});
@@ -69,5 +69,5 @@ window.addEventListener('cabin-ai',e=>{aiPending=false;aiResult=e.detail;if(view
 window.addEventListener('cabin-voice',e=>{if(view!=='courses')return;const result=e.detail||{};if(result.status){toast(result.status);return;}if(result.error){toast(result.error);return;}const id=C.voiceChoice(result.text,data.courses);if(!id){toast('학습 번호나 이름을 다시 말씀해 주세요.');return;}courseId=id;const c=activeCourse();unitIndex=Math.min(C.units(c).length-1,Math.floor(c.position||0));summaryOpen=false;navigate('learning');speak(c.title+' 학습을 선택했어요.');});
 window.addEventListener('pagehide',()=>{stopAudio();persist();});
 window.CabinApp={getState:()=>C.clone(data),getVehicle:()=>C.clone(vehicle.state),getView:()=>view,back:()=>{if(session){endSession();return;}stopAudio();navigate('home');}};
-render();
+render();if(storageLocked)toast('저장자료를 읽지 못해 원본을 보호 중입니다. 설정에서 원본을 내보내거나 초기화해 주세요.');
 })();
