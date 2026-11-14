@@ -62,7 +62,7 @@ public final class MainActivity extends Activity {
    @Override public void onError(String id){speechResult(id,true);}
   });
   setContentView(web);
-  web.loadUrl(ORIGIN+"index.html");
+  web.loadUrl(ORIGIN+"ev-day.html");
  }
  private void speechResult(String id,boolean error){if(id==null||id.isEmpty())return;runOnUiThread(()->{if(web!=null)web.evaluateJavascript("window.dispatchEvent(new CustomEvent('cabin-audio',{detail:{id:"+org.json.JSONObject.quote(id)+",error:"+error+"}}))",null);});}
  private void notifyMessage(String text){web.evaluateJavascript("window.dispatchEvent(new CustomEvent('cabin-message',{detail:"+org.json.JSONObject.quote(text)+"}))",null);}
