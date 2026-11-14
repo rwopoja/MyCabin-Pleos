@@ -33,9 +33,6 @@ public final class MainActivity extends Activity {
   // Respect the page's device-width viewport when the vehicle resizes an app window.
   settings.setUseWideViewPort(true);
   settings.setLoadWithOverviewMode(false);
-  settings.setSupportZoom(true);
-  settings.setBuiltInZoomControls(true);
-  settings.setDisplayZoomControls(false);
   // Let WebView use device density instead of forcing 100% physical-pixel scaling.
   web.setInitialScale(0);
   settings.setAllowFileAccess(false);
@@ -88,12 +85,7 @@ public final class MainActivity extends Activity {
   super.onConfigurationChanged(config);
   // Android WebView can keep the old page scale after a window configuration change.
   // Recompute the viewport without reloading the page or discarding a running session.
-  if(web!=null)web.postDelayed(()->{
-   // WebView may retain a fit-to-old-width zoom after a major window resize.
-   float scale=web.getScale(), target=getResources().getDisplayMetrics().density;
-   android.util.Log.i("MyCabinViewport","scale="+scale+" density="+target);
-   if(scale>0.1f && target/scale>1.1f && target/scale<10f){try{web.zoomBy(target/scale);}catch(RuntimeException ignored){}}
-  },500);
+  if(web!=null)web.postDelayed(()->web.evaluateJavascript("(function(){var m=document.querySelector('meta[name=viewport]');if(m){m.content='width=device-width';requestAnimationFrame(function(){m.content='width=device-width, initial-scale=1';});}})()",null),250);
  }
  @Override public void onBackPressed(){web.evaluateJavascript("window.CabinApp && window.CabinApp.back()",null);}
  @Override protected void onPause(){super.onPause();if(tts!=null)tts.stop();if(voice!=null)voice.cancel();web.evaluateJavascript("window.dispatchEvent(new Event('pagehide'))",null);web.onPause();}
