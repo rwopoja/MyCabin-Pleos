@@ -1,0 +1,64 @@
+name: Build signed APK and record Android demo
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/submission-demo.yml'
+      - 'web/**'
+      - 'app/**'
+      - 'scripts/build_local.py'
+      - 'scripts/smoke_android.py'
+permissions:
+  contents: read
+jobs:
+  build-and-demo:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - name: Install Android tools
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Build and verify signed demo APK
+        run: |
+          rm -f 'apk/김재윤_마이캐빈_release.apk'
+          python3 scripts/build_local.py
+          sha256sum 'apk/김재윤_마이캐빈_release.apk'
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run and record on ordinary Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          emulator-boot-timeout: 600
+          script: python3 scripts/smoke_android.py
+      - name: Upload signed APK and runtime evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: MyCabin-signed-APK-and-Android-demo
+          path: |
+            apk/김재윤_마이캐빈_release.apk
+            runtime-artifacts/
+          if-no-files-found: error
+  pleos-image-availability:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Inspect official Pleos system-image catalog
+        run: |
+          curl --fail --silent --show-error --max-time 60 'https://nexus-playground.pleos.ai/repository/raw-releases/connect-avd/2.x/crp-sys-img.xml' -o pleos-catalog.xml
+          python3 -c "import xml.etree.ElementTree as E; r=E.parse('pleos-catalog.xml').getroot(); print(E.tostring(r,encoding='unicode')[:12000])"

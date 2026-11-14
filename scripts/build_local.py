@@ -2,7 +2,7 @@
 Dependencies are downloaded from vendor Maven repositories; a dependency SHA256 manifest is written.
 Signing keys are local only and never copied into the repository.
 """
-import os,sys,pathlib,urllib.request,zipfile,subprocess,hashlib,json,shutil,concurrent.futures
+import os,sys,pathlib,urllib.request,zipfile,subprocess,hashlib,json,shutil,concurrent.futures,time
 ROOT=pathlib.Path(__file__).resolve().parents[1]
 SDK=pathlib.Path(os.environ['ANDROID_HOME']);JDK=pathlib.Path(os.environ['JAVA_HOME'])
 TOOLS=SDK/'build-tools/35.0.0';ANDROID=SDK/'platforms/android-35/android.jar'
@@ -21,10 +21,14 @@ def fetch(c):
  base='https://nexus-playground.pleos.ai/repository/maven-releases/' if g.startswith('ai.pleos') else 'https://dl.google.com/dl/android/maven2/' if g.startswith('androidx') else 'https://repo.maven.apache.org/maven2/'
  p=CACHE/f'{a}-{v}.{ext}'
  if not p.exists():
-  try:urllib.request.urlretrieve(base+rel,p)
-  except Exception:
-   if p.exists():p.unlink()
-   raise
+  for attempt in range(3):
+   try:
+    urllib.request.urlretrieve(base+rel,p)
+    break
+   except Exception:
+    if p.exists():p.unlink()
+    if attempt==2:raise
+    time.sleep(2**attempt)
  return c,p,base+rel
 results=list(concurrent.futures.ThreadPoolExecutor(max_workers=8).map(fetch,COORDS))
 jars=[];dep_resources=[];metadata=[]

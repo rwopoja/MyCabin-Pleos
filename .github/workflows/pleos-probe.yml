@@ -1,0 +1,16 @@
+name: Check Pleos emulator catalog
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/pleos-probe.yml'
+permissions:
+  contents: read
+jobs:
+  catalog:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Read official emulator metadata
+        run: |
+          curl --fail --silent --show-error --max-time 60 'https://nexus-playground.pleos.ai/repository/raw-releases/connect-avd/2.x/crp-sys-img.xml' -o catalog.xml
+          python3 -c "import xml.etree.ElementTree as E; r=E.parse('catalog.xml').getroot(); [print(E.tostring(x,encoding='unicode')) for x in r if x.tag.endswith('remotePackage')]"

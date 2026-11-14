@@ -6,7 +6,7 @@
 
 ## 바로 확인하기
 
-- [서명된 release APK](apk/김재윤_마이캐빈_release.apk)
+- [저장소에 보관된 이전 APK](apk/김재윤_마이캐빈_release.apk) — 현재 브랜치의 최신 소스가 반영된 파일인지 확인하고 교체해야 합니다.\n- [GitHub Actions APK 빌드 결과](https://github.com/rwopoja/MyCabin-Pleos/actions/workflows/submission-demo.yml) — 각 실행의 커밋과 테스트 결과를 확인한 뒤 산출물을 내려받으세요. 이 빌드는 개발용 임시 키로 서명됩니다.
 - [실제 APK 실행 녹화 / 약 84초](media/MyCabin_APK_Demo.mp4)
 - [원본 Android AVD 녹화](media/MyCabin_Android_AVD_Raw.mp4)
 - [기능 흐름 영상 / 89초](media/MyCabin_Prototype_Demo.mp4)
@@ -84,7 +84,7 @@ python scripts/build_local.py
 ## 테스트 환경과 화면 규격
 
 - 검증 호스트: Linux, JDK 17, Android Build Tools 35.0.0, Node 24, Python 3
-- 앱 기준 캔버스: **1269 × 902**, WebView 사용 가능 영역에 맞춰 비율 유지 확대·축소
+- 앱은 WebView 창 크기에 맞춰 반응형으로 배치합니다. 일반 Android AVD에서 세로 화면으로 새로 시작하면 정상 크기로 표시되지만, 가로에서 세로로 전환할 때 글씨가 지나치게 작아지는 문제가 남아 있습니다.
 - 공개 Pleos 화면 참고 목업: **1903 × 1068** 이미지. 참고 이미지 해상도이며 AVD 실제 디스플레이 규격 측정값이 아닙니다.
 - 앱 화면과 OS 화면을 구분하며 시스템 버튼을 앱에서 가로채지 않습니다.
 - UI 테스트: Happy DOM 이벤트·저장 상태 검증 + 일반 Android 14 Google APIs x86_64 AVD에서 제출 APK 설치·WebView 화면 전환 확인. AVD 표시 해상도 1920×1080, density 160. 음성 장치 출력은 미검증입니다.
