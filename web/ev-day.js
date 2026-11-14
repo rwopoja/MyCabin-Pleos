@@ -1,0 +1,7 @@
+'use strict';
+(function(){
+const ids=['soc','cap','eff','reserve','distance','hours','power'],defaults={soc:70,cap:60,eff:5,reserve:20,distance:90,hours:2,power:0.5},key='ev-day-inputs-v1';
+const el=id=>document.getElementById(id);let saved;try{saved=JSON.parse(localStorage.getItem(key)||'null');}catch(_){}if(saved&&typeof saved==='object')for(const id of ids)if(Number.isFinite(saved[id]))el(id).value=saved[id];
+el('form').addEventListener('submit',e=>{e.preventDefault();if(!el('form').reportValidity())return;const v=Object.fromEntries(ids.map(id=>[id,Number(el(id).value)]));if(ids.some(id=>!Number.isFinite(v[id]))||v.cap<=0||v.eff<=0){el('result').textContent='입력값을 확인해 주세요.';return;}const drive=v.distance/v.eff,rest=v.hours*v.power,total=drive+rest,raw=v.soc-total/v.cap*100;let text=`예상 소비 ${total.toFixed(1)} kWh (주행 ${drive.toFixed(1)} + 정차 ${rest.toFixed(1)})\n`;if(raw<0){text+='계산상 일정 종료 전 배터리가 소진됩니다. 충전 계획을 다시 확인하세요.';}else{text+=`일정 종료 예상 잔량 ${raw.toFixed(1)}% · 목표 여유 대비 ${(raw-v.reserve).toFixed(1)}%p\n`;text+=raw<v.reserve?'입력한 조건에서 목표 여유에 미달합니다. 충전 계획을 확인하세요.':'입력한 조건에서는 목표 여유 이상입니다. 실제 보장은 아닙니다.';}el('result').innerText=text;el('result').style.whiteSpace='pre-line';try{localStorage.setItem(key,JSON.stringify(v));}catch(_){el('result').innerText+='\n입력값을 저장하지 못했습니다.';}});
+el('clear').addEventListener('click',()=>{for(const id of ids)el(id).value=defaults[id];try{localStorage.removeItem(key);}catch(_){}el('result').textContent='입력값을 초기화했습니다.';});
+})();
