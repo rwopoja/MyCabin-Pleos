@@ -13,7 +13,7 @@
  <uses-permission android:name="ai.pleos.playground.service.vehicle.VEHICLE_BINDING"/>
  <queries><intent><action android:name="ai.pleos.playground.vehicle.VEHICLE_START"/></intent><intent><action android:name="android.speech.RecognitionService"/></intent></queries>
  <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
- <application android:label="My Cabin" android:icon="@drawable/ic_cabin" android:theme="@style/AppTheme" android:allowBackup="false" android:usesCleartextTraffic="false" android:supportsRtl="true">
+ <application android:label="하루전기 시험판" android:icon="@drawable/ic_cabin" android:theme="@style/AppTheme" android:allowBackup="false" android:usesCleartextTraffic="false" android:supportsRtl="true">
   <meta-data android:name="ai.pleos.playground.service.vehicle.min_version_name" android:value="2.3.13"/>
   <meta-data android:name="ai.pleos.playground.service.vehicle.min_version_code" android:value="65"/>
   <meta-data android:name="ai.pleos.playground.sdk.vehicle.current_version_name" android:value="2.3.2"/>
