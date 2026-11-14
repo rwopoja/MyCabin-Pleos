@@ -6,7 +6,7 @@
 
 ## 바로 확인하기
 
-- [저장소에 보관된 이전 APK](apk/김재윤_마이캐빈_release.apk) — 현재 브랜치의 최신 소스가 반영된 파일인지 확인하고 교체해야 합니다.\n- [GitHub Actions APK 빌드 결과](../../actions/workflows/submission-demo.yml) — 각 실행의 커밋과 테스트 결과를 확인한 뒤 산출물을 내려받으세요. 이 빌드는 개발용 임시 키로 서명됩니다.
+- [저장소에 보관된 이전 APK](apk/김재윤_마이캐빈_release.apk) — 현재 브랜치의 최신 소스가 반영된 파일인지 확인하고 교체해야 합니다.\n- [GitHub Actions APK 빌드 결과](https://github.com/rwopoja/MyCabin-Pleos/actions/workflows/submission-demo.yml) — 각 실행의 커밋과 테스트 결과를 확인한 뒤 산출물을 내려받으세요. 이 빌드는 개발용 임시 키로 서명됩니다.
 - [실제 APK 실행 녹화 / 약 84초](media/MyCabin_APK_Demo.mp4)
 - [원본 Android AVD 녹화](media/MyCabin_Android_AVD_Raw.mp4)
 - [기능 흐름 영상 / 89초](media/MyCabin_Prototype_Demo.mp4)
