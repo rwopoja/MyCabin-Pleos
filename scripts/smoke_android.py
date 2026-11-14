@@ -63,6 +63,10 @@ try:
  snapshot('09-portrait')
  tap('처음으로');assert '지금, 어떻게' in ET.tostring(tree(),encoding='unicode'), 'Portrait navigation failed'
  snapshot('10-portrait-home')
+ (OUT/'portrait-tree.xml').write_text(ET.tostring(tree(),encoding='unicode'))
+ # Distinguish live resizing from a fresh launch on a tall display.
+ adb('shell','am','force-stop','kr.mycabin.app');adb('shell','am','start','-W','-n','kr.mycabin.app/.MainActivity');time.sleep(5)
+ snapshot('11-portrait-fresh');(OUT/'portrait-fresh-tree.xml').write_text(ET.tostring(tree(),encoding='unicode'))
  (OUT/'result.json').write_text(json.dumps({'apk_installed':True,'ui_flow':'passed (wide and portrait)','platform':'ordinary Android API 34 AVD; NOT Pleos Connect','vehicle':'simulated','sdk_runtime_verified':False},ensure_ascii=False,indent=2))
  print('Actual Android APK launch and accessibility flow passed. Pleos service not present.',flush=True)
 finally:
