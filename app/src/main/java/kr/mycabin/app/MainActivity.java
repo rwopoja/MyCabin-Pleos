@@ -81,6 +81,12 @@ public final class MainActivity extends Activity {
   @JavascriptInterface public void exportData(String json){if(json==null||json.length()>2000000)return;runOnUiThread(()->{Intent share=new Intent(Intent.ACTION_SEND);share.setType("text/plain");share.putExtra(Intent.EXTRA_TEXT,json);startActivity(Intent.createChooser(share,"마이씬 내보내기"));});}
  }
  @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(request==41&&voice!=null)voice.onPermission(results.length>0&&results[0]==android.content.pm.PackageManager.PERMISSION_GRANTED);if(request==42&&pleos!=null)pleos.inspect();}
+ @Override public void onConfigurationChanged(android.content.res.Configuration config){
+  super.onConfigurationChanged(config);
+  // Android WebView can keep the old page scale after a window configuration change.
+  // Recompute the viewport without reloading the page or discarding a running session.
+  if(web!=null)web.postDelayed(()->web.evaluateJavascript("(function(){var m=document.querySelector('meta[name=viewport]');if(m){m.content='width=device-width';requestAnimationFrame(function(){m.content='width=device-width, initial-scale=1';});}})()",null),250);
+ }
  @Override public void onBackPressed(){web.evaluateJavascript("window.CabinApp && window.CabinApp.back()",null);}
  @Override protected void onPause(){super.onPause();if(tts!=null)tts.stop();if(voice!=null)voice.cancel();web.evaluateJavascript("window.dispatchEvent(new Event('pagehide'))",null);web.onPause();}
  @Override protected void onResume(){super.onResume();if(web!=null)web.onResume();}
