@@ -17,10 +17,10 @@ else: raise AssertionError('EV planning screen not loaded')
 shot('01-ev-home')
 for node in root.iter('node'):
  if '계획 계산하기' in node.get('text',''):
-  x1,y1,x2,y2=map(int,re.findall(r'\\d+',node.get('bounds','')))
+  x1,y1,x2,y2=map(int,re.findall(r'[0-9]+',node.get('bounds','')))
   adb('shell','input','tap',str((x1+x2)//2),str((y1+y2)//2));break
 else: raise AssertionError('Calculate button not found')
-time.sleep(3);result=ET.tostring(tree(),encoding='unicode');(OUT/'result-tree.xml').write_text(result);shot('02-ev-result')
+time.sleep(3);adb('shell','input','swipe','1000','880','1000','400','450');time.sleep(2);result=ET.tostring(tree(),encoding='unicode');(OUT/'result-tree.xml').write_text(result);shot('02-ev-result')
 assert '19.0 kWh' in result, 'Expected sample energy result not found'
 (OUT/'result.json').write_text(json.dumps({'platform':'Android 14; not Pleos','ev_calculation':'passed','vehicle_data':'manual','speech':'not implemented','prediction_accuracy':'not validated'},ensure_ascii=False,indent=2))
 print('EV prototype calculation passed on standard Android AVD')
