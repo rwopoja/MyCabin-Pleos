@@ -72,7 +72,7 @@ window.addEventListener('cabin-message',e=>toast(e.detail));
 window.addEventListener('cabin-audio',e=>{if(playing&&activeSpeech&&e.detail&&e.detail.id===activeSpeech){playing=false;activeSpeech=null;if(!e.detail.error)progress(true);else toast('음성 합성을 완료하지 못했어요. 기기의 음성 설정을 확인해 주세요.');if(view==='learning')render();}});
 window.addEventListener('cabin-ai',e=>{aiPending=false;aiResult=e.detail;if(view==='learning')render();else toast('AI 요청 결과를 확인해 주세요.');});
 window.addEventListener('cabin-voice',e=>{if(view!=='courses')return;const result=e.detail||{};if(result.status){toast(result.status);return;}if(result.error){toast(result.error);return;}const id=C.voiceChoice(result.text,data.courses);if(!id){toast('학습 번호나 이름을 다시 말씀해 주세요.');return;}courseId=id;const c=activeCourse();unitIndex=Math.min(C.units(c).length-1,Math.floor(c.position||0));summaryOpen=false;navigate('learning');speak(c.title+' 학습을 선택했어요.');});
-window.addEventListener('pagehide',()=>{stopAudio();persist();});
+window.addEventListener('pagehide',()=>{stopAudio();persist();if(view==='learning')render();});
 window.CabinApp={getState:()=>C.clone(data),getVehicle:()=>C.clone(vehicle.state),getView:()=>view,back:()=>{if(session){endSession();return;}stopAudio();navigate('home');}};
 render();if(storageLocked)toast('저장자료를 읽지 못해 원본을 보호 중입니다. 설정에서 원본을 내보내거나 초기화해 주세요.');
 })();
